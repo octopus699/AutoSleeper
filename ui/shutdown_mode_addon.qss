@@ -1,0 +1,17 @@
+/* Mode selection, intentionally unobtrusive. Append to your existing styles.qss. */
+QCheckBox#realShutdownCheckbox {
+    color: #A7B0A9;
+    background-color: transparent;
+    font-size: 12px;
+    spacing: 6px;
+}
+QCheckBox#realShutdownCheckbox:hover {
+    color: #00E676;
+}
+QCheckBox#realShutdownCheckbox:disabled {
+    color: #737373;
+}
+QCheckBox#realShutdownCheckbox::indicator {
+    width: 15px;
+    height: 15px;
+}

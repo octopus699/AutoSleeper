@@ -3,6 +3,7 @@
 import math
 import time
 from pathlib import Path
+from core.tray_status import build_tray_display
 
 from PySide6.QtCore import QObject, Qt
 from PySide6.QtGui import QAction, QIcon
@@ -47,6 +48,9 @@ class TrayManager(QObject):
             }
         """)
 
+        self.status_action = QAction(self.menu)
+        self.status_action.setEnabled(False)
+
         self.open_action = QAction(self.menu)
         self.cancel_action = QAction(self.menu)
         self.exit_action = QAction(self.menu)
@@ -55,11 +59,14 @@ class TrayManager(QObject):
         self.cancel_action.triggered.connect(self.cancel_timer)
         self.exit_action.triggered.connect(self.exit_application)
 
+        self.menu.addAction(self.status_action)
+        self.menu.addSeparator()
         self.menu.addAction(self.open_action)
         self.menu.addAction(self.cancel_action)
         self.menu.addSeparator()
         self.menu.addAction(self.exit_action)
 
+        self.menu.aboutToShow.connect(self.refresh)
         self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.activated.connect(self.on_activated)
         self.refresh()
@@ -90,22 +97,29 @@ class TrayManager(QObject):
         self.app.quit()
 
     def refresh(self):
-        self.open_action.setText(self.window.t("tray_open"))
-        self.cancel_action.setText(self.window.t("tray_cancel"))
-        self.exit_action.setText(self.window.t("tray_exit"))
+        """Update tray texts; only touch Qt when the displayed value changes."""
+        labels = (
+            (self.open_action, self.window.t("tray_open")),
+            (self.cancel_action, self.window.t("tray_cancel")),
+            (self.exit_action, self.window.t("tray_exit")),
+        )
+        for action, label in labels:
+            if action.text() != label:
+                action.setText(label)
 
-        active = self.window.deadline is not None
-        self.cancel_action.setEnabled(active)
+        display = build_tray_display(
+            deadline=self.window.deadline,
+            status_key=self.window.status_key,
+            real_enabled=self.window.shutdown_manager.real_enabled,
+            translate=self.window.t,
+        )
 
-        if active:
-            remaining = max(0, math.ceil(self.window.deadline - time.monotonic()))
-            hours, remainder = divmod(remaining, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            time_text = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-            tip = self.window.t("tray_remaining", time=time_text)
-        else:
-            tip = self.window.t("tray_idle")
+        if self.cancel_action.isEnabled() != display.can_cancel:
+            self.cancel_action.setEnabled(display.can_cancel)
 
-        full_tooltip = f"AutoSleeper - {tip}"
-        if self.tray_icon.toolTip() != full_tooltip:
-            self.tray_icon.setToolTip(full_tooltip)
+        if self.status_action.text() != display.message:
+            self.status_action.setText(display.message)
+
+        tooltip = f"AutoSleeper - {display.message}"
+        if self.tray_icon.toolTip() != tooltip:
+            self.tray_icon.setToolTip(tooltip)

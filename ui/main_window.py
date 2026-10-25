@@ -7,6 +7,8 @@ from PySide6.QtCore import QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QColor, QPainter, QPixmap, QPolygon
 from PySide6.QtWidgets import (
     QComboBox,
+    QCheckBox,
+    QMessageBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -18,8 +20,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.shutdown_manager import ShutdownExecutionError, ShutdownManager
+from core.preferences import Preferences
 from ui.translations import TRANSLATIONS
-
+from ui.toggle_switch import ToggleSwitch
 
 class LanguageComboBox(QComboBox):
     """Draw a small Matrix-green drop-down triangle over the native arrow."""
@@ -80,9 +84,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("AutoSleeper")
         self.setFixedSize(700, 425)
 
-        self.language = "en"
+        self.preferences = Preferences()
+        self.language = self.preferences.load_language(TRANSLATIONS)
         self.status_key = "ready"
         self.tray_manager = None
+        self.shutdown_manager = ShutdownManager()
+        self._last_timer_tick = None
         self._allow_close = False
 
         self.deadline = None
@@ -226,10 +233,29 @@ class MainWindow(QMainWindow):
         self.stack.currentChanged.connect(self.on_page_changed)
         layout.addWidget(self.stack, 1)
 
+        # Compact status row: status stays centered, live-mode opt-in at right.
         self.status_label = QLabel()
         self.status_label.setObjectName("status")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.status_label)
+
+        self.real_shutdown_checkbox = ToggleSwitch()
+        self.real_shutdown_checkbox.setChecked(
+            self.shutdown_manager.real_enabled
+        )
+
+        self.real_shutdown_checkbox.setObjectName("realShutdownCheckbox")
+        self.real_shutdown_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.real_shutdown_checkbox.toggled.connect(self.change_shutdown_mode)
+
+        status_row = QHBoxLayout()
+        status_row.setContentsMargins(0, 0, 0, 0)
+        status_row.setSpacing(0)
+        status_left_spacer = QWidget()
+        status_left_spacer.setFixedWidth(150)
+        status_row.addWidget(status_left_spacer)
+        status_row.addWidget(self.status_label, 1)
+        status_row.addWidget(self.real_shutdown_checkbox)
+        layout.addLayout(status_row)
 
         # Footer (brand name is deliberately not translated)
         footer = QFrame()
@@ -534,6 +560,7 @@ class MainWindow(QMainWindow):
             return
 
         self.language = language
+        self.preferences.save_language(language)
         self.apply_language()
 
     def apply_language(self):
@@ -556,6 +583,26 @@ class MainWindow(QMainWindow):
         self.minimize_button.setToolTip(self.t("minimize"))
         self.close_button.setToolTip(self.t("close"))
         self.language_combo.setToolTip(self.t("choose_language"))
+        self.real_shutdown_checkbox.setText(self.t("real_shutdown_toggle"))
+        self.real_shutdown_checkbox.setToolTip(self.t("real_shutdown_hint"))
+        self.refresh_tray()
+
+    def change_shutdown_mode(self, enabled):
+        if enabled:
+            choice = QMessageBox.warning(
+                self,
+                self.t("real_shutdown_warning_title"),
+                self.t("real_shutdown_warning"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if choice != QMessageBox.StandardButton.Yes:
+                self.real_shutdown_checkbox.blockSignals(True)
+                self.real_shutdown_checkbox.setChecked(False)
+                self.real_shutdown_checkbox.blockSignals(False)
+                return
+
+        self.shutdown_manager.set_real_mode(enabled)
         self.refresh_tray()
 
     def set_status(self, key):
@@ -599,8 +646,10 @@ class MainWindow(QMainWindow):
         self.shutdown_time = datetime.now() + timedelta(seconds=seconds)
 
         self.update_shutdown_time_label()
-        self.set_status("timer_running")
+        self.set_status("timer_running_real" if self.shutdown_manager.real_enabled else "timer_running")
         self.stack.setCurrentIndex(2)
+        self.real_shutdown_checkbox.setEnabled(False)
+        self._last_timer_tick = time.monotonic()
         self.update_timer()
         self.timer.start()
 
@@ -608,7 +657,16 @@ class MainWindow(QMainWindow):
         if self.deadline is None:
             return
 
-        remaining = max(0, math.ceil(self.deadline - time.monotonic()))
+        now = time.monotonic()
+        # Fail closed if Qt stopped receiving timer ticks for a long period.
+        # A sleep/resume or prolonged system stall must never trigger immediate
+        # shutdown based on a timer that expired while the app was unresponsive.
+        if self._last_timer_tick is not None and now - self._last_timer_tick > 8.0:
+            self.cancel_timer(status_key="sleep_cancelled")
+            return
+        self._last_timer_tick = now
+
+        remaining = max(0, math.ceil(self.deadline - now))
         hours, remainder = divmod(remaining, 3600)
         minutes, seconds = divmod(remainder, 60)
         self.countdown_label.setText(f"{hours:02d}:{minutes:02d}:{seconds:02d}")
@@ -618,10 +676,13 @@ class MainWindow(QMainWindow):
         else:
             self.refresh_tray()
 
-    def cancel_timer(self, status_key="timer_cancelled"):
+    def cancel_timer(self, _checked=False, *, status_key="timer_cancelled"):
+        # The first argument accepts QPushButton.clicked(bool) safely.
         self.timer.stop()
         self.deadline = None
         self.shutdown_time = None
+        self._last_timer_tick = None
+        self.real_shutdown_checkbox.setEnabled(True)
         self.stack.setCurrentIndex(0)
         self.set_status(status_key)
 
@@ -644,13 +705,28 @@ class MainWindow(QMainWindow):
         self.timer.stop()
         self.deadline = None
         self.shutdown_time = None
+        self._last_timer_tick = None
         event.accept()
 
     def finish_timer(self):
         self.timer.stop()
         self.deadline = None
         self.shutdown_time = None
+        self._last_timer_tick = None
+        self.real_shutdown_checkbox.setEnabled(True)
         self.stack.setCurrentIndex(0)
-        self.set_status("timer_finished")
+
+        try:
+            executed = self.shutdown_manager.request_shutdown()
+        except ShutdownExecutionError as exc:
+            self.set_status("shutdown_failed_status")
+            QMessageBox.critical(
+                self,
+                self.t("shutdown_failed_title"),
+                self.t("shutdown_failed_message", error=str(exc)),
+            )
+            return
+
+        self.set_status("shutdown_requested" if executed else "timer_finished")
 
     #endregion

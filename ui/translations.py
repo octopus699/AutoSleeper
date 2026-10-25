@@ -26,7 +26,22 @@ TRANSLATIONS = {
         "tray_exit": "Exit AutoSleeper",
         "tray_idle": "No active timer",
         "tray_remaining": "Shutdown in {time} (test mode)",
-        "sleep_cancelled": "Timer cancelled - System suspended",
+        "tray_remaining_real": "Shutdown in {time} (real shutdown)",
+        "sleep_cancelled": "Timer cancelled - System suspended or timer stalled",
+        "real_shutdown_toggle": "Real shutdown",
+        "real_shutdown_hint": "Disabled by default on every launch",
+        "real_shutdown_warning_title": "Enable real shutdown?",
+        "real_shutdown_warning": (
+            "When this timer reaches zero, AutoSleeper will ask Windows to shut down "
+            "immediately. Save your work first. Unsaved apps may block shutdown. "
+            "This setting resets to test mode when AutoSleeper restarts.\n\n"
+            "Enable real shutdown for this session?"
+        ),
+        "timer_running_real": "Timer running - Real shutdown enabled",
+        "shutdown_requested": "Shutdown requested from Windows",
+        "shutdown_failed_status": "Windows shutdown failed",
+        "shutdown_failed_title": "Unable to shut down Windows",
+        "shutdown_failed_message": "Windows rejected the shutdown request:\n{error}",
     },
     "es": {
         "subtitle": "Temporizador de apagado automático",
@@ -55,6 +70,21 @@ TRANSLATIONS = {
         "tray_exit": "Salir de AutoSleeper",
         "tray_idle": "Sin temporizador activo",
         "tray_remaining": "Apagado en {time} (modo prueba)",
-        "sleep_cancelled": "Temporizador cancelado - Sistema suspendido",
+        "tray_remaining_real": "Apagado en {time} (apagado real)",
+        "sleep_cancelled": "Temporizador cancelado - Suspensión o bloqueo prolongado",
+        "real_shutdown_toggle": "Apagado real",
+        "real_shutdown_hint": "Desactivado al iniciar la aplicación",
+        "real_shutdown_warning_title": "¿Activar el apagado real?",
+        "real_shutdown_warning": (
+            "Cuando el contador llegue a cero, AutoSleeper pedirá a Windows que se apague "
+            "inmediatamente. Guarda antes tu trabajo. Algunas aplicaciones pueden "
+            "bloquear el apagado. Este ajuste volverá al modo de prueba al reiniciar.\n\n"
+            "¿Activar el apagado real durante esta sesión?"
+        ),
+        "timer_running_real": "Temporizador activo - Apagado real habilitado",
+        "shutdown_requested": "Apagado solicitado a Windows",
+        "shutdown_failed_status": "Error al apagar Windows",
+        "shutdown_failed_title": "No se ha podido apagar Windows",
+        "shutdown_failed_message": "Windows ha rechazado la solicitud de apagado:\n{error}",
     },
 }
