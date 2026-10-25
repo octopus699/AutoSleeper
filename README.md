@@ -1,63 +1,78 @@
 # AutoSleeper
 
-A lightweight Windows shutdown timer developed by **Blackout Studios** using Python and PySide6.
+**A lightweight automatic shutdown timer for Windows.**  
+Developed by **Blackout Studios** with Python and PySide6.
 
-AutoSleeper can shut down Windows after a selected countdown, while keeping its interface accessible from the system tray.
+AutoSleeper lets you schedule a Windows shutdown using a quick preset or a custom countdown. Its dark Matrix Green interface can be hidden to the system tray without interrupting the timer.
 
 ## Features
 
-- Quick presets: 15, 30, 45, or 60 minutes.
-- Custom countdown: hours, minutes, and seconds.
-- Remaining-time display and expected shutdown time.
-- Windows system tray with countdown status, restore, cancel, and exit actions.
-- Single-instance protection: launching AutoSleeper again restores the existing window.
-- Automatic cancellation when Windows suspends or resumes.
-- English and Spanish interface, with the selected language remembered using `QSettings`.
-- Real-shutdown mode and a separate test mode.
-- Portable build for Windows using PyInstaller.
+- **Quick timers:** 15, 30, 45, and 60 minutes.
+- **Custom countdown:** hours, minutes, and seconds.
+- **Live display:** remaining time and estimated shutdown clock time.
+- **System tray:** keep the countdown running while the window is hidden; restore, cancel, or exit from the tray menu.
+- **Single instance:** launching AutoSleeper again restores the existing window instead of starting another timer.
+- **Sleep handling:** cancels the active countdown when Windows suspends; it does not resume automatically.
+- **Languages:** English and Spanish, with the language choice saved between launches.
+- **Shutdown preference:** separate test mode and real-shutdown mode, with the user's last choice saved between launches.
+- **Portable executable:** run the Windows build without installing Python.
 
-## Download and run
+## Download
 
-After the first release has been published, download `AutoSleeper.exe` from the GitHub **Releases** section. Save it in any folder and run it. No separate Python installation is required.
+Download **`AutoSleeper.exe`** from the **Releases** section of this repository. The release may also include **`AutoSleeper.exe.sha256`** for integrity verification.
 
-The executable must be built on Windows; test the built executable on Windows 10/11 before release. The current build targets the architecture of the Python environment used to package it.
+The provided build targets **64-bit Windows 10/11**. It is not digitally signed; Windows might show an unknown-publisher warning. Obtain the executable from this project's release page and check its checksum if needed.
 
-## Usage
+## Getting started
 
-1. Open AutoSleeper.
-2. Choose a preset, or select **Set Custom** to enter a duration.
-3. Check the **Real shutdown** switch before starting. When this switch is ON, reaching zero can shut down Windows immediately.
-4. Start the timer. You may hide the application with **X**; it continues running in the system tray.
-5. To stop the timer, select **Cancel Timer** in the window or tray menu. Use **Exit AutoSleeper** to quit completely.
+1. Open `AutoSleeper.exe`.
+2. Select a preset, or choose **Set Custom** to specify a duration.
+3. Check **Real shutdown** before starting: **OFF** means a test countdown without shutting down Windows; **ON** allows the countdown to shut down Windows.
+4. Start the countdown. Closing the window with **X** hides it to the Windows system tray.
+5. Choose **Cancel Timer** to stop the countdown, or **Exit AutoSleeper** from the tray menu to exit completely.
 
-> **Important:** In the current configuration, *Real shutdown* starts **ON** by default. Save your work before starting a timer. Switch it **OFF** when testing the application. The shutdown command does not forcibly close applications; Windows may delay or prevent shutdown when unsaved work is present.
+### Safety and saved preferences
+
+- On a **first launch with no saved preferences**, Real shutdown is **OFF**.
+- The application **remembers the last confirmed ON/OFF setting**, even after a restart. If you previously enabled real shutdown, it may therefore open in **ON** mode on the next launch.
+- Switching to ON requires confirmation. If you decline, the previous setting is retained.
+- A running timer is **not** saved or resumed after exiting.
+- Windows sleep/resume cancels an active timer instead of continuing it.
+- Real shutdown uses `shutdown.exe /s /t 0` when the countdown reaches zero. It does not request forced application closure, but you should **save all work** before allowing shutdown.
 
 ## Development
 
-Requires Python 3.13 and project dependencies installed in a virtual environment.
+Requires **Python 3.13** on Windows and the project's Python dependencies.
 
 ```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe main.py
 ```
 
-Run tests:
+Run the tests:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Build on Windows:
+Build a portable executable:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_portable.ps1
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\prepare_release.ps1
 ```
 
-Output: `dist\AutoSleeper.exe`.
+The generated executable is placed in `dist\AutoSleeper.exe`. Building for Windows requires Windows.
 
-## Project status
+## Automated builds
 
-Preparing the first Windows release candidate. The source, automated tests, and portable build configuration are maintained in this repository. Real shutdown, Windows power events, and the packaged executable must be validated on Windows before the initial stable release.
+The workflow at `.github/workflows/windows-build.yml` runs tests and builds the Windows executable for pushes and version tags. Version tags also create a **draft** GitHub Release for manual review; drafts are not automatically published.
 
 ## License
 
-No open-source license has been selected yet. Add an appropriate `LICENSE` file before distributing the source code under an open-source license.
+**No source-code license has been selected yet.** The code should not be presented as open source until a license is chosen and a `LICENSE` file is added. The ability to view public source code does not by itself grant permission to reuse or redistribute it.
+
+---
+
+**Blackout Studios · 2026**
