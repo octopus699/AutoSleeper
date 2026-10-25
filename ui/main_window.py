@@ -2,11 +2,9 @@ import math
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from PySide6.QtCore import QPoint, Qt, QTimer, QRect
-from PySide6.QtGui import QColor, QPainter, QPolygon
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QPoint, QRect, Qt, QTimer
+from PySide6.QtGui import QColor, QPainter, QPixmap, QPolygon
 from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
@@ -24,43 +22,28 @@ from ui.translations import TRANSLATIONS
 
 
 class LanguageComboBox(QComboBox):
+    """Draw a small Matrix-green drop-down triangle over the native arrow."""
 
     def paintEvent(self, event):
         super().paintEvent(event)
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
         hovered = self.underMouse()
-
-        background = QColor(
-            "#153822" if hovered else "#202020"
-        )
-
-        arrow_color = QColor(
-            "#00FF41" if hovered else "#00E676"
-        )
-
+        background = QColor("#153822" if hovered else "#202020")
+        arrow_color = QColor("#00FF41" if hovered else "#00E676")
         center_x = self.width() - 14
         center_y = self.height() // 2
 
-        # Cover the native Windows arrow
-        painter.fillRect(
-            QRect(center_x - 9, center_y - 7, 18, 14),
-            background
-        )
-
-        # Draw custom Matrix green triangle
+        painter.fillRect(QRect(center_x - 9, center_y - 7, 18, 14), background)
         triangle = QPolygon([
             QPoint(center_x - 5, center_y - 2),
             QPoint(center_x + 5, center_y - 2),
-            QPoint(center_x, center_y + 4)
+            QPoint(center_x, center_y + 4),
         ])
-
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(arrow_color)
         painter.drawPolygon(triangle)
-
         painter.end()
 
     def enterEvent(self, event):
@@ -99,6 +82,8 @@ class MainWindow(QMainWindow):
 
         self.language = "en"
         self.status_key = "ready"
+        self.tray_manager = None
+        self._allow_close = False
 
         self.deadline = None
         self.shutdown_time = None
@@ -210,9 +195,6 @@ class MainWindow(QMainWindow):
         self.language_combo.addItem("English", "en")
         self.language_combo.addItem("Español", "es")
         self.language_combo.setFixedSize(112, 36)
-
-
-
         self.language_combo.setCursor(Qt.CursorShape.PointingHandCursor)
         self.language_combo.setCurrentIndex(
             self.language_combo.findData(self.language)
@@ -574,10 +556,16 @@ class MainWindow(QMainWindow):
         self.minimize_button.setToolTip(self.t("minimize"))
         self.close_button.setToolTip(self.t("close"))
         self.language_combo.setToolTip(self.t("choose_language"))
+        self.refresh_tray()
 
     def set_status(self, key):
         self.status_key = key
         self.status_label.setText(self.t(key))
+        self.refresh_tray()
+
+    def refresh_tray(self):
+        if self.tray_manager is not None:
+            self.tray_manager.refresh()
 
     def update_shutdown_time_label(self):
         if self.shutdown_time is None:
@@ -627,13 +615,36 @@ class MainWindow(QMainWindow):
 
         if remaining == 0:
             self.finish_timer()
+        else:
+            self.refresh_tray()
 
-    def cancel_timer(self):
+    def cancel_timer(self, status_key="timer_cancelled"):
         self.timer.stop()
         self.deadline = None
         self.shutdown_time = None
         self.stack.setCurrentIndex(0)
-        self.set_status("timer_cancelled")
+        self.set_status(status_key)
+
+    def cancel_due_to_sleep(self):
+        # Also called on resume as a defensive fallback. Do not restart the timer.
+        if self.deadline is not None:
+            self.cancel_timer(status_key="sleep_cancelled")
+
+    def closeEvent(self, event):
+        if (
+            not self._allow_close
+            and self.tray_manager is not None
+            and self.tray_manager.available
+        ):
+            event.ignore()
+            self.hide()
+            return
+
+        # No tray available (or explicit Exit): close normally, cancel countdown.
+        self.timer.stop()
+        self.deadline = None
+        self.shutdown_time = None
+        event.accept()
 
     def finish_timer(self):
         self.timer.stop()
