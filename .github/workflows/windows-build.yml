@@ -1,0 +1,101 @@
+name: AutoSleeper - Windows build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test and build on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install Python 3.13
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          $python = ".\.venv\Scripts\python.exe"
+          & $python -m pip install --upgrade pip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          if (Test-Path "requirements.txt") {
+            & $python -m pip install -r requirements.txt
+          } else {
+            & $python -m pip install PySide6
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & $python -m pip install -r requirements-build.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run tests, build EXE, and calculate checksum
+        shell: pwsh
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\prepare_release.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Store executable as workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: AutoSleeper-Windows
+          path: |
+            dist/AutoSleeper.exe
+            dist/AutoSleeper.exe.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  release_draft:
+    name: Prepare draft GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download tested executable
+        uses: actions/download-artifact@v8
+        with:
+          name: AutoSleeper-Windows
+          path: dist
+
+      - name: Create release draft for new tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+
+          # Never replace or alter an existing GitHub Release.
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release for $tag already exists. Leaving it untouched."
+            exit 0
+          fi
+
+          options=(--verify-tag --draft --generate-notes --title "AutoSleeper $tag")
+          if [[ "$tag" == *-* ]]; then
+            options+=(--prerelease)
+          fi
+
+          gh release create "$tag" \
+            dist/AutoSleeper.exe \
+            dist/AutoSleeper.exe.sha256 \
+            "${options[@]}" \
+            --repo "$GITHUB_REPOSITORY"

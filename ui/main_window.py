@@ -89,6 +89,9 @@ class MainWindow(QMainWindow):
         self.status_key = "ready"
         self.tray_manager = None
         self.shutdown_manager = ShutdownManager()
+        self.shutdown_manager.set_real_mode(
+            self.preferences.load_real_shutdown()
+        )
         self._last_timer_tick = None
         self._allow_close = False
 
@@ -603,6 +606,7 @@ class MainWindow(QMainWindow):
                 return
 
         self.shutdown_manager.set_real_mode(enabled)
+        self.preferences.save_real_shutdown(enabled)
         self.refresh_tray()
 
     def set_status(self, key):
