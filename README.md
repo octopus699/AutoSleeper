@@ -69,10 +69,13 @@ The generated executable is placed in `dist\AutoSleeper.exe`. Building for Windo
 
 The workflow at `.github/workflows/windows-build.yml` runs tests and builds the Windows executable for pushes and version tags. Version tags also create a **draft** GitHub Release for manual review; drafts are not automatically published.
 
+
 ## License
 
-**No source-code license has been selected yet.** The code should not be presented as open source until a license is chosen and a `LICENSE` file is added. The ability to view public source code does not by itself grant permission to reuse or redistribute it.
+AutoSleeper is open-source software licensed under the
+[MIT License](LICENSE).
 
----
+Copyright © 2026 Blackout Studios.
 
-**Blackout Studios · 2026**
+
+
