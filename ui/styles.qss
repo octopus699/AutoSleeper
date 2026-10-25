@@ -1,0 +1,390 @@
+
+/* =========================================
+   GENERAL
+   ========================================= */
+
+QMainWindow {
+    background-color: #121212;
+    color: #F2F2F2;
+    font-family: "Segoe UI";
+    font-size: 18px;
+}
+
+QWidget {
+    color: #F2F2F2;
+    font-family: "Segoe UI";
+    font-size: 18px;
+    background-color: transparent;
+}
+
+
+/* =========================================
+   HEADERS
+   ========================================= */
+
+QLabel#title {
+    font-size: 33px;
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+QLabel#subtitle {
+    font-size: 15px;
+    color: #9CA3AF;
+}
+
+QLabel#sectionTitle {
+    font-size: 20px;
+    font-weight: 600;
+    color: #E5E7EB;
+}
+
+QLabel#dynamicHeader {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+QLabel#customTitle {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 23px;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   TIMER & STATUS
+   ========================================= */
+
+QLabel#countdown {
+    font-size: 60px;
+    font-weight: 700;
+    color: #00E676;
+}
+
+QLabel#status {
+    font-size: 14px;
+    color: #808995;
+}
+
+
+/* =========================================
+   GENERAL BUTTONS
+   ========================================= */
+
+QPushButton {
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    border: 1px solid #343434;
+    background-color: #252525;
+    color: #F2F2F2;
+}
+
+QPushButton:hover {
+    background-color: #153822;
+    border-color: #00E676;
+}
+
+QPushButton:pressed {
+    background-color: #205531;
+    border-color: #00C853;
+}
+
+QPushButton:disabled {
+    background-color: #202020;
+    color: #666666;
+    border-color: #303030;
+}
+
+
+/* =========================================
+   PRESET BUTTONS
+   ========================================= */
+
+QPushButton#presetButton {
+    font-size: 25px;
+    background-color: #1E1E1E;
+}
+
+QPushButton#presetButton:hover {
+    background-color: #153822;
+    border-color: #00FF41;
+}
+
+QPushButton#presetButton:pressed {
+    background-color: #205531;
+    border-color: #00C853;
+}
+
+
+/* =========================================
+   PRIMARY BUTTON
+   ========================================= */
+
+QPushButton#primaryButton {
+    background-color: #00C853;
+    border: none;
+    color: #06180B;
+}
+
+QPushButton#primaryButton:hover {
+    background-color: #00FF41;
+    border: none;
+    color: #06180B;
+}
+
+QPushButton#primaryButton:pressed {
+    background-color: #009B40;
+    border: none;
+    color: #FFFFFF;
+}
+
+QPushButton#primaryButton:disabled {
+    background-color: #20422B;
+    border: none;
+    color: #708576;
+}
+
+
+/* =========================================
+   SECONDARY BUTTON
+   ========================================= */
+
+QPushButton#secondaryButton {
+    background-color: #252525;
+}
+
+QPushButton#secondaryButton:hover {
+    background-color: #153822;
+    border-color: #00E676;
+}
+
+QPushButton#secondaryButton:pressed {
+    background-color: #205531;
+}
+
+
+/* =========================================
+   DANGER BUTTON
+   ========================================= */
+
+QPushButton#dangerButton {
+    background-color: #B91C1C;
+    border: none;
+    color: #FFFFFF;
+}
+
+QPushButton#dangerButton:hover {
+    background-color: #DC2626;
+    border: none;
+    color: #FFFFFF;
+}
+
+QPushButton#dangerButton:pressed {
+    background-color: #991B1B;
+    border: none;
+    color: #FFFFFF;
+}
+
+
+/* =========================================
+   FOOTER
+   ========================================= */
+
+QFrame#footer {
+    background-color: #242424;
+    border-top: 1px solid #343434;
+}
+
+QLabel#footerText {
+    background-color: transparent;
+    color: #A0A0A0;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+QLabel#companyLogo {
+    background-color: transparent;
+    border: none;
+}
+
+
+/* =========================================
+   CUSTOM TIMER CARD
+   ========================================= */
+
+QFrame#customCard {
+    background-color: transparent;
+    border: none;
+}
+
+
+/* =========================================
+   CLOSE BUTTON
+   ========================================= */
+
+QToolButton#closeButton {
+    background-color: transparent;
+    border: none;
+    color: #D1D5DB;
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+QToolButton#closeButton:hover {
+    color: #00FF41;
+    background-color: transparent;
+}
+
+
+/* =========================================
+   TIME SELECTOR LABELS
+   ========================================= */
+
+QLabel#timeColon {
+    color: #D1D5DB;
+    font-size: 35px;
+    font-weight: 700;
+    padding-top: 18px;
+}
+
+QLabel#timeUnitLabel {
+    color: #CFCFCF;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   TIME SELECTOR ARROWS
+   ========================================= */
+
+QToolButton#arrowButton {
+    background-color: #242424;
+    border: 1px solid #343434;
+    border-radius: 6px;
+    color: #F3F4F6;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 0;
+}
+
+QToolButton#arrowButton:hover {
+    background-color: #153822;
+    border-color: #00FF41;
+    color: #00FF41;
+}
+
+QToolButton#arrowButton:pressed {
+    background-color: #205531;
+    border-color: #00C853;
+    color: #FFFFFF;
+}
+
+
+/* =========================================
+   TIME VALUE FRAME
+   ========================================= */
+
+QFrame#timeValueFrame {
+    background-color: #1E1E1E;
+    border: 1px solid #3A3A3A;
+    border-radius: 8px;
+}
+
+QLabel#timeValueLabel {
+    color: #FFFFFF;
+    font-size: 43px;
+    font-weight: 700;
+    background-color: transparent;
+}
+
+
+
+/* CUSTOM TITLE BAR */
+
+QFrame#titleBar {
+    background-color: #1B1B1B;
+    border-bottom: 1px solid #303030;
+}
+
+QLabel#titleBarText {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QPushButton#titleBarButton,
+QPushButton#titleBarClose {
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+    color: #FFFFFF;
+    font-size: 17px;
+    padding: 0;
+}
+
+QPushButton#titleBarButton:hover {
+    background-color: #153822;
+    color: #00FF41;
+}
+
+QPushButton#titleBarClose:hover {
+    background-color: #B91C1C;
+    color: #FFFFFF;
+}
+
+
+
+
+/* =========================================
+   LANGUAGE SELECTOR
+   ========================================= */
+
+QComboBox#languageSelector {
+    background-color: #202020;
+    color: #F2F2F2;
+    border: 1px solid #343434;
+    border-radius: 7px;
+    padding: 4px 28px 4px 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QComboBox#languageSelector:hover {
+    background-color: #153822;
+    border-color: #00E676;
+}
+
+QComboBox#languageSelector:focus {
+    border-color: #00FF41;
+}
+
+/* Right-side arrow area */
+
+QComboBox#languageSelector::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 24px;
+    border: none;
+    background: transparent;
+}
+
+/* Dropdown options */
+
+QComboBox#languageSelector QAbstractItemView {
+    background-color: #202020;
+    color: #F2F2F2;
+    border: 1px solid #343434;
+    selection-background-color: #153822;
+    selection-color: #00FF41;
+    outline: none;
+    font-size: 14px;
+}
